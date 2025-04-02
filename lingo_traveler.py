@@ -13,8 +13,13 @@ print("\n")
 
 url = "https://restcountries.com/v3.1"
 path = "lang"
+
 response = requests.get(url + "/" + path + "/" + language.lower())
-states = response.json()
+
+if response.status_code == 200:
+    states = response.json()
+else:
+    print("Error " + str(response.status_code) + ": Please try again.")
 
 countries = []
 for state in states:
@@ -23,25 +28,30 @@ for state in states:
             state_params = state["name"].copy()
             for common_name, state_name in list(state_params.items()):
                 if common_name in ["common", "official"]:
-                    countries.append(state["name"].get(common_name).lower())
+                    countries.append(state["name"][common_name].lower())
         else:
             print("Skipping state as 'name' is not a dictionary.")
     except TypeError as err:
         print("Process did not work! Error:", str(err).title())
         sys.exit()
 
+for iterator, country in enumerate(countries, 1):
+    print(str(iterator) + ". " + country.title())
+print("↑↑↑ Right above are some countries where", language.title(), "is spoken ↑↑↑")
+print("\n")
+
 country = input("Now tell us the country you would like to visit to see if you can speak your language there. | Country: ").lower()
 print("\n")
 
 selected_state = None
 for state in states:
-    if country == state["name"].get("common", "").lower() or country == state["name"].get("official", "").lower():
+    if country == state["name"]["common"].lower() or country == state["name"]["official"].lower():
         selected_state = state
         break
 
 if selected_state:
     while True:
-        print("What would you like to know about " + country.title() + "? " + selected_state.get("flag", " ") + " | ** Enter a number only **")
+        print("What would you like to know about " + country.title() + "? " + selected_state["flag"] + " | ** Enter a number only **")
         print("0. EXIT PROGRAM")
         print("1. Population of " + country.title())
         print("2. Capital of " + country.title())
@@ -56,30 +66,64 @@ if selected_state:
         try:
             info = int(input("Answer: "))
             if info == 1:
-                print("Population:", selected_state.get("population", "Data not available"))
+                if "population" in selected_state:
+                    print("Population:", selected_state["population"])
+                else:
+                    print("Population: Data not available")
             elif info == 2:
-                print("Capital:", selected_state.get("capital", ["Data not available"])[0])
+                if "capital" in selected_state:
+                    print("Capital:", selected_state["capital"][0])
+                else:
+                    print("Capital: Data not available")
             elif info == 3:
-                currencies = selected_state.get("currencies", {})
-                if currencies:
+                if "currencies" in selected_state:
+                    currencies = selected_state["currencies"]
                     for json, details in list(currencies.items()):
-                        currency_name = details.get("name", "Unknown currency")
-                        currency_symbol = details.get("symbol", "")
+                        if "name" in details:
+                            currency_name = details["name"]
+                        else:
+                            currency_name = "Unknown currency"
+                        if "symbol" in details:
+                            currency_symbol = details["symbol"]
+                        else:
+                            currency_symbol = ""
                         print("Currency:", currency_name, currency_symbol)
                 else:
                     print("Currency information is not available.")
             elif info == 4:
-                print("Flag Information & Attributes:", selected_state.get("flags", "Data not available"))
+                if "flags" in selected_state:
+                    print("Flag Information & Attributes:", selected_state["flags"]["alt"])
+                else:
+                    print("Flag Information & Attributes: Data not available")
             elif info == 5:
-                print("Google Maps Location:", selected_state.get("maps", {}).get("googleMaps", "Data not available"))
+                if "maps" in selected_state:
+                    print("Google Maps Location:", selected_state["maps"]["googleMaps"])
+                else:
+                    print("Google Maps Location: Data not available")
             elif info == 6:
-                print("OpenStreet Maps Location:", selected_state.get("maps", {}).get("openStreetMaps", "Data not available"))
+                if "maps" in selected_state:
+                    print("OpenStreet Maps Location:", selected_state["maps"]["openStreetMaps"])
+                else:
+                    print("OpenStreet Maps Location: Data not available")
             elif info == 7:
-                print("FIFA Status:", selected_state.get("fifa", "Data not available"))
+                if "fifa" in selected_state:
+                    print("FIFA Status:", selected_state["fifa"])
+                else:
+                    print("FIFA Status: Data not available")
             elif info == 8:
-                print("Timezones:", selected_state.get("timezones", "Data not available"))
+                if "timezones" in selected_state:
+                    print("Timezones:")
+                    for timezone in selected_state["timezones"]:
+                        print(timezone)
+                else:
+                    print("Timezones: Data not available")
             elif info == 9:
-                print("Continents:", selected_state.get("continents", "Data not available"))
+                if "continents" in selected_state:
+                    print("Continents:")
+                    for continent in selected_state["continents"]:
+                        print(continent)
+                else:
+                    print("Continents: Data not available")
             elif info == 0:
                 print("Thank you for using LingoTraveler!")
                 break
